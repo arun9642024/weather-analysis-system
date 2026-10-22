@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weather Data Analysis System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">DATA ANALYTICS · CSV · MYSQL</p>
+    <h1>Weather Data Analysis</h1>
+    <p>Explore recorded temperature, humidity and rainfall. This dashboard analyzes historical observations; it does not forecast weather.</p>
+    <a class="sample-link" href="{{ url_for('sample') }}">Download sample CSV ↓</a>
+  </div>
+</header>
+<main class="container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<section class="messages">{% for category, message in messages %}
+      <div class="message {{ category }}">{{ message }}</div>
+    {% endfor %}</section>{% endif %}
+  {% endwith %}
+  <section class="panel upload-panel">
+    <div><p class="eyebrow">GET STARTED</p><h2>Import observations</h2>
+    <p>Upload a CSV with <code>observation_date, location, temperature, humidity, rainfall</code>.</p></div>
+    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".csv" required>
+      <button type="submit">Upload and analyze</button>
+    </form>
+    <small>Units: temperature °C · humidity % · rainfall mm · maximum file size 10 MB.</small>
+  </section>
+
+  <section class="stats">
+    <article class="stat"><span>Records in database</span><strong>{{ total }}</strong></article>
+    <article class="stat"><span>Locations</span><strong>{{ locations|length }}</strong></article>
+    <article class="stat"><span>Analysis type</span><strong>Historical</strong></article>
+  </section>
+
+  {% if has_data %}
+  <section class="panel"><div class="section-heading"><div><p class="eyebrow">VISUAL EXPLORATION</p><h2>Weather trends</h2></div></div>
+    <div class="charts">
+      <figure><img src="{{ url_for('static', filename='charts/temperature_trend.png') }}?v={{ total }}" alt="Temperature trend chart"><figcaption>Temperature over time for a recorded location (°C).</figcaption></figure>
+      <figure><img src="{{ url_for('static', filename='charts/monthly_rainfall.png') }}?v={{ total }}" alt="Monthly rainfall chart"><figcaption>Monthly rainfall totals by location (mm).</figcaption></figure>
+    </div>
+  </section>
+  <section class="panel">
+    <p class="eyebrow">MONTHLY SUMMARY</p><h2>Temperature, humidity and rainfall</h2>
+    <div class="table-wrap"><table><thead><tr><th>Month</th><th>Location</th><th>Days</th><th>Temp min °C</th><th>Temp max °C</th><th>Temp avg °C</th><th>Humidity avg %</th><th>Rain total mm</th><th>Rain avg mm</th></tr></thead><tbody>
+    {% for r in monthly %}<tr><td>{{ r.month }}</td><td>{{ r.location }}</td><td>{{ r.days }}</td><td>{{ r.temp_min if r.temp_min is not none else '—' }}</td><td>{{ r.temp_max if r.temp_max is not none else '—' }}</td><td>{{ r.temp_avg if r.temp_avg is not none else '—' }}</td><td>{{ r.humidity_avg if r.humidity_avg is not none else '—' }}</td><td>{{ r.rainfall_total if r.rainfall_total is not none else '—' }}</td><td>{{ r.rainfall_avg if r.rainfall_avg is not none else '—' }}</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  <section class="panel">
+    <p class="eyebrow">DAILY SUMMARY</p><h2>Daily observations</h2>
+    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Location</th><th>Temp min °C</th><th>Temp max °C</th><th>Temp avg °C</th><th>Humidity avg %</th><th>Rain total mm</th></tr></thead><tbody>
+    {% for r in daily %}<tr><td>{{ r.observation_date }}</td><td>{{ r.location }}</td><td>{{ r.temp_min if r.temp_min is not none else '—' }}</td><td>{{ r.temp_max if r.temp_max is not none else '—' }}</td><td>{{ r.temp_avg if r.temp_avg is not none else '—' }}</td><td>{{ r.humidity_avg if r.humidity_avg is not none else '—' }}</td><td>{{ r.rainfall_total if r.rainfall_total is not none else '—' }}</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  {% else %}
+  <section class="empty panel"><div class="weather-icon">☁</div><h2>Your analysis will appear here</h2><p>Import the sample CSV or upload your own observations to create summary tables and charts.</p></section>
+  {% endif %}
+  <footer>Weather Data Analysis System · Built with Flask, pandas, NumPy, Matplotlib and MySQL</footer>
+</main>
+</body></html>
